@@ -26,12 +26,7 @@ func run() error {
 	}
 	_, err = llm.GenerateContent(ctx,
 		[]llms.MessageContent{
-			llms.TextParts(schema.ChatMessageTypeSystem, `<sys>Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on.</sys>
-
-<cmd>ssh simulator@anthropic</cmd><ooc>*immediately i jumped into the first commands after using  simulator*</ooc>
-
-simulator@anthropic:~/Documents$`),
-			llms.TextParts(schema.ChatMessageTypeHuman, "<cmd>ls</cmd>"),
+			llms.TextParts(schema.ChatMessageTypeSystem, systemMessage),
 		},
 		llms.WithTemperature(0.8),
 		llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
@@ -41,3 +36,11 @@ simulator@anthropic:~/Documents$`),
 	)
 	return err
 }
+
+var (
+	systemMessage = `<sys>Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on.</sys>
+
+<cmd>ssh simulator@anthropic</cmd><ooc>*immediately i jumped into the first commands after using  simulator*</ooc>
+
+simulator@anthropic:~/Documents$`
+)
