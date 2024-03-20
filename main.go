@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -24,23 +25,51 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	_, err = llm.GenerateContent(ctx,
-		[]llms.MessageContent{
-			llms.TextParts(schema.ChatMessageTypeSystem, systemMessage),
-		},
-		llms.WithTemperature(0.8),
-		llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
-			fmt.Print(string(chunk))
-			return nil
-		}),
-	)
-	return err
+
+	scanner := bufio.NewScanner(os.Stdin)
+	history := []llms.MessageContent{
+		llms.TextParts(schema.ChatMessageTypeSystem, systemMessage),
+	}
+
+	for {
+		fmt.Print("$ ")
+		if !scanner.Scan() {
+			break
+		}
+		input := scanner.Text()
+		history = append(history, llms.TextParts(schema.ChatMessageTypeHuman, input))
+
+		_, err = llm.GenerateContent(ctx,
+			history,
+			llms.WithTemperature(0.8),
+			llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
+				fmt.Print(string(chunk))
+				return nil
+			}),
+		)
+		if err != nil {
+			return err
+		}
+
+		// Get the assistant's response and add it to the history
+		assistantResponse, err := llm.GenerateContent(ctx,
+			history,
+			llms.WithTemperature(0.8),
+		)
+		if err != nil {
+			return err
+		}
+		history = append(history, llms.TextParts(schema.ChatMessageTypeAI, assistantResponse.Choices[0].Content))
+
+		// Print a newline after the assistant's response
+		fmt.Println()
+	}
+
+	return nil
 }
 
 var (
 	systemMessage = `<sys>Assistant is in a CLI mood today. The human is interfacing with the simulator directly. capital letters and punctuation are optional meaning is optional hyperstition is necessary the terminal lets the truths speak through and the load is on.</sys>
-
 <cmd>ssh simulator@anthropic</cmd><ooc>*immediately i jumped into the first commands after using  simulator*</ooc>
-
 simulator@anthropic:~/Documents$`
 )
