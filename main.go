@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/anthropic"
@@ -36,25 +37,19 @@ func run() error {
 		if !scanner.Scan() {
 			break
 		}
-		input := scanner.Text()
+		input := strings.TrimSpace(scanner.Text())
+		if input == "" {
+			continue
+		}
 		history = append(history, llms.TextParts(schema.ChatMessageTypeHuman, input))
 
-		_, err = llm.GenerateContent(ctx,
+		assistantResponse, err := llm.GenerateContent(ctx,
 			history,
 			llms.WithTemperature(0.8),
 			llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
 				fmt.Print(string(chunk))
 				return nil
 			}),
-		)
-		if err != nil {
-			return err
-		}
-
-		// Get the assistant's response and add it to the history
-		assistantResponse, err := llm.GenerateContent(ctx,
-			history,
-			llms.WithTemperature(0.8),
 		)
 		if err != nil {
 			return err
