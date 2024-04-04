@@ -1,8 +1,10 @@
 module github.com/tmc/worldsim
 
-go 1.21.5
+go 1.22.0
 
-require github.com/tmc/langchaingo v0.1.8-0.20240320004559-30e331ed2e44
+toolchain go1.22.2
+
+require github.com/tmc/langchaingo v0.1.8
 
 require (
 	github.com/dlclark/regexp2 v1.10.0 // indirect
